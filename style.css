@@ -1,0 +1,229 @@
+* {
+    outline: 0;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    background: #1E1F24;
+    font-size: 1em;
+    color: #b2b3b7;
+    height: 100%;
+    margin: 0px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+video {
+    width: 100%;
+    height: auto;
+    height: 100%;
+    object-fit: cover;
+}
+
+a,
+a:visited {
+    color: #1E1F24;
+}
+
+hr {
+    border: 1px dashed #cdcdcd;
+    border-bottom: 0px;
+    height: 0px;
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0);
+}
+
+[contenteditable='true']:empty:before {
+    cursor: text !important;
+    content: attr(data-placeholder);
+    color: #999;
+}
+
+#wrap {
+    width: 100%;
+    height: 100%;
+    margin: auto;
+}
+
+.videoWrap {
+    position: relative;
+    float: left;
+    width: 33%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.standalone-container {
+    margin: auto;
+    position: relative;
+    float: right;
+    width: 33%;
+    height: 100%;
+}
+
+#editor-container {
+    height: calc(100% - 42px);
+}
+
+.fityfity {
+    position: relative;
+    float: left;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#selfVideo {
+    -webkit-transform: scaleX(-1);
+    -moz-transform: scaleX(-1);
+    -ms-transform: scaleX(-1);
+    -o-transform: scaleX(-1);
+    transform: scaleX(-1);
+}
+
+#chatBtn {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    background: #fff;
+    display: block;
+    height: 48px;
+    width: 48px;
+    line-height: 48px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 2rem;
+    border-radius: 24px;
+}
+
+#chatWrap {
+    position: fixed;
+    right: 0px;
+    bottom: 50px;
+    width: 320px;
+}
+
+#chats {
+    height: 420px;
+    overflow-y: scroll;
+}
+
+.chat {
+    background: #fff;
+    color: #1E1F24;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 10px;
+}
+
+.chat.mine {
+    text-align: right;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+#newmsg {
+    margin-top: 0px;
+}
+
+#blanket {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 5;
+}
+
+#intro {
+    position: relative;
+    width: 50%;
+    top: 15%;
+    left: 25%;
+    right: 25%;
+    background: #fff;
+    color: #1E1F24;
+    padding: 25px;
+    line-height: 1.75;
+    font-size: 1.2rem;
+    box-sizing: border-box;
+}
+
+#pitch {
+    padding: 0 0 10px;
+}
+
+.formWrap {
+    display: none;
+}
+
+.formWrap input,
+.formWrap button {
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #999;
+}
+
+.formWrap input {
+    display: block;
+    width: 77%;
+    margin-right: 2%;
+    float: left;
+}
+
+.formWrap button {
+    display: block;
+    width: 20%;
+    cursor: pointer;
+    border-color: #3498db;
+    background: #3498db;
+    color: #fff;
+}
+
+.formWrap#step2 button {
+    border-color: #1abc9c;
+    background: #1abc9c;
+}
+
+.desc {
+    font-size: 1rem;
+}
+
+#footer {
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 15px 0 0;
+}
+
+@media only screen and (max-width: 960px) {
+    #intro {
+        width: 80%;
+        top: 15%;
+        left: 10%;
+        right: 10%;
+        padding: 15px;
+    }
+}
+
+@media only screen and (max-width: 720px) {
+    .videoWrap {
+        width: 100%;
+        height: 50%;
+    }
+    #intro {
+        width: 96%;
+        top: 15%;
+        left: 2%;
+        right: 2%;
+    }
+}

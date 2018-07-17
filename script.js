@@ -1,29 +1,41 @@
 const peerConfig = {
-    'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'},
-        {'urls': 'stun:stun.stunprotocol.org:3478'},
-        {'urls': 'stun:stun.sipnet.net:3478'},
-        {'urls': 'stun:stun.ideasip.com:3478'},
-        {'urls': 'stun:stun.iptel.org:3478'}
+    'iceServers': [{
+            'urls': 'stun:stun.l.google.com:19302'
+        },
+        {
+            'urls': 'stun:stun.stunprotocol.org:3478'
+        },
+        {
+            'urls': 'stun:stun.sipnet.net:3478'
+        },
+        {
+            'urls': 'stun:stun.ideasip.com:3478'
+        },
+        {
+            'urls': 'stun:stun.iptel.org:3478'
+        }
     ]
 };
-let peerConnection, signalChannel, msgChannel, localStream, signal, isPeer;
-const remoteMessage = {sdp: null, ice: []};
+let peerConnection, signalChannel, msgChannel, deltaChannel, localStream, signal, isPeer;
+const remoteMessage = {
+    sdp: null,
+    ice: []
+};
 const isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
 
 const onGetUserMediaSuccess = (stream) => document.getElementById('selfVideo').srcObject = stream;
 const errorHandler = (error) => console.error(error);
 
-if(navigator.mediaDevices.getUserMedia) {
+if (navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-    })
-    .then((stream) => {
-        localStream = stream;
-        onGetUserMediaSuccess(stream);
-    })
-    .catch(errorHandler);
+            video: true,
+            audio: true
+        })
+        .then((stream) => {
+            localStream = stream;
+            onGetUserMediaSuccess(stream);
+        })
+        .catch(errorHandler);
 } else {
     alert('Your browser does not support getUserMedia API');
 }
@@ -33,27 +45,30 @@ const signalMsgHandler = async event => {
     await setPeerDescription(signal);
     await setPeerIceCandidates(signal);
 }
+
 const msgHandler = event => addChat(event.data, false);
+
+const deltaHandler = event => updateEditor(event.data, false);
 
 const setUpPeerConnection = () => {
     peerConnection = new RTCPeerConnection(peerConfig);
     peerConnection.onicecandidate = (event) => {
-        if(event.candidate != null) remoteMessage.ice.push(event.candidate);
+        if (event.candidate != null) remoteMessage.ice.push(event.candidate);
         else {
             // Completed the gathering of ICE candidate.
-            if(signalChannel){
-                if(signalChannel.readyState === 'open'){
+            if (signalChannel) {
+                if (signalChannel.readyState === 'open') {
                     signalChannel.send(JSON.stringify(remoteMessage));
                     return;
                 }
             }
             const signalHash = LZString.compressToBase64(JSON.stringify(remoteMessage));
-            if(isPeer){
+            if (isPeer) {
                 document.getElementById('copyMessage').value = signalHash;
                 document.querySelector('#step1 .desc').innerHTML = "<i>Copy the below message and share it with your peer.</i>";
                 document.getElementById('step1').style.display = 'block';
-            }else{
-                document.getElementById('copyMessage').value = window.location.href+'#'+signalHash;                
+            } else {
+                document.getElementById('copyMessage').value = window.location.href + '#' + signalHash;
                 document.getElementById('step1').style.display = 'block';
                 document.getElementById('step2').style.display = 'block';
             }
@@ -65,28 +80,36 @@ const setUpPeerConnection = () => {
     };
     peerConnection.ondatachannel = (event) => {
         const channel = event.channel;
-        if(channel.label == 'signal'){
+        if (channel.label == 'signal') {
             signalChannel = event.channel;
             signalChannel.onmessage = signalMsgHandler;
-        }else if(channel.label == 'messages'){
+        } else if (channel.label == 'messages') {
             msgChannel = event.channel;
             msgChannel.onmessage = msgHandler;
+        } else if (channel.label == 'deltas') {
+            deltaChannel = event.channel;
+            deltaChannel.onmessage = deltaHandler;
         }
     };
 }
 const addStream = (stream) => peerConnection.addStream(stream);
 const createOffer = async () => {
-    const description = await peerConnection.createOffer({offerToReceiveAudio: 1});
+    const description = await peerConnection.createOffer({
+        offerToReceiveAudio: 1
+    });
     await setLocalDescription(description);
 }
 
 const createDataChannel = (name, msgHandler) => {
-    if(name === "signal"){
-        signalChannel = peerConnection.createDataChannel(name); 
+    if (name === "signal") {
+        signalChannel = peerConnection.createDataChannel(name);
         signalChannel.onmessage = msgHandler;
-    }else if (name === "messages"){
+    } else if (name === "messages") {
         msgChannel = peerConnection.createDataChannel(name);
         msgChannel.onmessage = msgHandler;
+    } else if (name === "deltas") {
+        deltaChannel = peerConnection.createDataChannel(name);
+        deltaChannel.onmessage = deltaHandler;
     }
 }
 const sendMsgDataChannel = (channel, msg) => channel.send(msg);
@@ -99,9 +122,11 @@ const setLocalDescription = async (description) => {
 const setPeerDescription = async (signal) => {
     await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
     // Only create answers in response to offers
-    if(signal.sdp.type == 'offer') {
+    if (signal.sdp.type == 'offer') {
         const description = await peerConnection.createAnswer();
-        isSafari && setTimeout(() => peerConnection.onicecandidate({candidate: null}), 1000);
+        isSafari && setTimeout(() => peerConnection.onicecandidate({
+            candidate: null
+        }), 1000);
         await setLocalDescription(description);
     }
 };
@@ -117,29 +142,52 @@ const onPeerSignal = async (signalMsg) => {
     await setPeerIceCandidates(signal);
     peerConnection.addStream(localStream);
     createDataChannel('messages', msgHandler);
+    createDataChannel('deltas', deltaHandler);
     await createOffer();
-    isSafari && setTimeout(() => peerConnection.onicecandidate({candidate: null}), 1000);
+    isSafari && setTimeout(() => peerConnection.onicecandidate({
+        candidate: null
+    }), 1000);
 }
 
 const startApp = async () => {
     peerConnection || setUpPeerConnection();
 
-    if(!isPeer){
+    if (!isPeer) {
         createDataChannel('signal', signalMsgHandler);
         await createOffer();
-        isSafari && setTimeout(() => peerConnection.onicecandidate({candidate: null}), 1000);
-    }else{
+        isSafari && setTimeout(() => peerConnection.onicecandidate({
+            candidate: null
+        }), 1000);
+    } else {
         await setPeerDescription(signal);
         await setPeerIceCandidates(signal);
     }
 }
 
 // if the location.hash is present, treat as peer
-if(window.location.hash.length > 1){
+if (window.location.hash.length > 1) {
     signal = JSON.parse(LZString.decompressFromBase64(window.location.hash.substring(1)));
     isPeer = true;
 }
+
 startApp();
+
+const quill = new Quill('#editor-container', {
+    placeholder: '...',
+    theme: 'bubble'
+});
+
+quill.on('text-change', function (delta, oldDelta, source) {
+    if (source == 'user') {
+        deltaChannel.send(JSON.stringify(delta));
+    }
+});
+
+const updateEditor = (msg, isMine) => {
+    if (!isMine) {
+        quill.updateContents(JSON.parse(msg));
+    }
+}
 
 const copyBtn = () => {
     document.getElementById('copyMessage').select();
@@ -171,7 +219,7 @@ document.getElementById('newmsg').addEventListener('keydown', (event) => {
 
 const addChat = (msg, isMine) => {
     const chat = document.createElement('div');
-    chat.className = 'chat ' +(isMine ? 'mine': '');
+    chat.className = 'chat ' + (isMine ? 'mine' : '');
     chat.innerHTML = msg;
     document.getElementById('chats').appendChild(chat);
     document.getElementById('chatWrap').style.display = 'block';
